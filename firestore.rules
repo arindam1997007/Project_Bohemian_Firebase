@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {      
+      allow create: if request.auth != null;
+      allow read, update: if isCurrentUser(userId);
+      
+    }
+    
+    match /products/{productId} {
+      allow read : if true;   
+      allow create : if validProductIncomingData();
+      
+      match /productDetails/{productDetailsId}{
+      	allow read : if true; 
+      }
+    }
+    
+    // Functions
+    
+    function isCurrentUser(userId){
+    	return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // function existingData(){
+    //  return resource.data;
+    // }
+    
+    function incomingData(){    
+  return request.resource.data;
+    }
+    
+    function validProductIncomingData(){
+    		let inbData = incomingData();
+        return inbData.category != null && inbData.description != null && inbData.name != null && 
+        inbData.price != null && inbData.thumbnail != null && inbData.timeStamp != null && 
+        inbData.size.length > 0 && inbData.color.length > 0;
+    }
+  }
+}
